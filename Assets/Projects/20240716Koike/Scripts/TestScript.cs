@@ -8,19 +8,34 @@ namespace UnityEngine.Formats.Alembic.Importer
     {
         [SerializeField] AlembicStreamPlayer alembicStreamPlayer;
 
-        public float gotParam;
-        public float sendParam;
+        private float animationDuration;
+        public float currentTime;
+        public float timeMoveSpeed;
+        private float lastMousePositionX;
 
         // Start is called before the first frame update
         void Start()
         {
-            gotParam = alembicStreamPlayer.EndTime;
+            animationDuration = alembicStreamPlayer.EndTime;
+            currentTime = 0;
+            alembicStreamPlayer.CurrentTime = currentTime;
+            lastMousePositionX = Input.mousePosition.x;
         }
 
         // Update is called once per frame
         void Update()
         {
-            alembicStreamPlayer.CurrentTime = sendParam;
+            if(lastMousePositionX < Input.mousePosition.x && Input.GetMouseButton(0))
+            {
+                var diff = Input.mousePosition.x - lastMousePositionX;
+                currentTime += diff * timeMoveSpeed;
+                if(currentTime >= animationDuration) {
+                    currentTime = animationDuration;
+                }
+            }
+            alembicStreamPlayer.CurrentTime = currentTime;
+
+            lastMousePositionX = Input.mousePosition.x;
         }
     }
 }
