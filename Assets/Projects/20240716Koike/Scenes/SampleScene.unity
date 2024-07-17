@@ -337,8 +337,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   alembicStreamPlayer: {fileID: 1160263649}
-  gotParam: 0
-  sendParam: 0
+  currentTime: 0
+  timeMoveSpeed: 0.001
 --- !u!1001 &1199706093
 PrefabInstance:
   m_ObjectHideFlags: 0
