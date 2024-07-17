@@ -8,10 +8,26 @@ public class VideoOperator : MonoBehaviour
     [SerializeField] private VideoPlayer videoPlayer;
     [SerializeField] private float currentTime;
 
-    public bool isOperateMode;
+    public bool isHaruMode, isHagasuMode;
+    private bool HaruModeDown;
 
     public float timeMoveSpeed;
+
+    private float downPoint;
+    public float haruMouseLength;
+
     private float lastMousePositionX;
+
+    public enum Mode
+    {
+        Play,
+        Haru,
+        Hagasu
+    };
+
+    [SerializeField] private List<float> checkPoints = new List<float>();
+    [SerializeField] private List<Mode> operateModes = new List<Mode>();
+    public int currentSection;
 
     void Awake()
     {
@@ -19,38 +35,83 @@ public class VideoOperator : MonoBehaviour
         videoPlayer.prepareCompleted += OnVideoPlayerPrepared;
         videoPlayer.Prepare();
 
-        isOperateMode = false;
+        isHagasuMode = false;
         lastMousePositionX = Input.mousePosition.x;
+        HaruModeDown = false;
+
+        currentSection = 0;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(videoPlayer.time > 3.0f && videoPlayer.time <= 4.0f && !isOperateMode)
+        if (currentSection < checkPoints.Count)
         {
-            videoPlayer.Pause();
-            isOperateMode = true;
-        }
-
-        if (isOperateMode)
-        {
-            if (Input.GetMouseButton(0))
+            if (videoPlayer.time > checkPoints[currentSection] && !isHagasuMode && !isHaruMode )
             {
-                if(Input.mousePosition.x > lastMousePositionX)
+                videoPlayer.Pause();
+                currentSection++;
+                if (operateModes[currentSection] == Mode.Hagasu)
                 {
-                    float diff = Input.mousePosition.x - lastMousePositionX;
-                    videoPlayer.time += diff * timeMoveSpeed;
+                    isHagasuMode = true;
+                    isHaruMode = false;
+                }
+                else if (operateModes[currentSection] == Mode.Haru)
+                {
+                    isHagasuMode = false;
+                    isHaruMode = true;
+                }
+            }
 
-                    if(videoPlayer.time > 6.0f)
+
+            if (isHagasuMode)
+            {
+                if (Input.GetMouseButton(0))
+                {
+                    if (Input.mousePosition.x < lastMousePositionX)
                     {
-                        videoPlayer.time = 6.0f;
-                        Debug.Log("replay");
-                        isOperateMode = false;
-                        videoPlayer.Play();
+                        float diff = lastMousePositionX - Input.mousePosition.x;
+                        videoPlayer.time += diff * timeMoveSpeed;
+
+                        if (videoPlayer.time > checkPoints[currentSection])
+                        {
+                            videoPlayer.time = checkPoints[currentSection];
+                            Debug.Log("replay");
+                            isHagasuMode = false;
+                            videoPlayer.Play();
+                            currentSection++;
+                        }
                     }
                 }
             }
+
+            if (isHaruMode)
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    downPoint = Input.mousePosition.x;
+                    HaruModeDown = true;
+                }
+
+                if (HaruModeDown && Input.GetMouseButton(0))
+                {
+                    float diff = Input.mousePosition.x - downPoint;
+                    if (diff > haruMouseLength)
+                    {
+                        Debug.Log("replay");
+                        isHaruMode = false;
+                        videoPlayer.Play();
+                        currentSection++;
+                    }
+                }
+
+                if (Input.GetMouseButtonUp(0))
+                {
+                    HaruModeDown = false;
+                }
+            }
         }
+
 
         currentTime = (float)videoPlayer.time;
         lastMousePositionX = Input.mousePosition.x;

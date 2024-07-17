@@ -391,8 +391,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 2129483872}
   currentTime: 0
-  isOperateMode: 0
+  isHaruMode: 0
+  isHagasuMode: 0
   timeMoveSpeed: 0.02
+  haruMouseLength: 640
+  checkPoints:
+  - 2
+  - 4
+  - 6
+  - 8
+  operateModes: 0000000002000000000000000100000000000000
+  currentSection: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
