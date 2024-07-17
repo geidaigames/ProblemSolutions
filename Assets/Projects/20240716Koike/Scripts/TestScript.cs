@@ -20,7 +20,7 @@ namespace UnityEngine.Formats.Alembic.Importer
         // Update is called once per frame
         void Update()
         {
-            sendParam = alembicStreamPlayer.CurrentTime;
+            alembicStreamPlayer.CurrentTime = sendParam;
         }
     }
 }
