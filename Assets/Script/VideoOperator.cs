@@ -7,6 +7,9 @@ public class VideoOperator : MonoBehaviour
 {
     [SerializeField] private VideoPlayer videoPlayer;
     [SerializeField] private float currentTime;
+    [SerializeField] private List<AudioClip> soundEffects = new List<AudioClip>();
+
+    [SerializeField] private AudioSource audioSource;
 
     public bool isHaruMode, isHagasuMode;
     private bool HaruModeDown;
@@ -47,41 +50,51 @@ public class VideoOperator : MonoBehaviour
     {
         if (currentSection < checkPoints.Count)
         {
-            if (videoPlayer.time > checkPoints[currentSection] && !isHagasuMode && !isHaruMode )
+            if (videoPlayer.time > checkPoints[currentSection] && videoPlayer.time < checkPoints[currentSection + 1] && !isHagasuMode && !isHaruMode)
             {
+                Debug.Log("Pause : CheckPoint " + currentSection.ToString());
                 videoPlayer.Pause();
                 currentSection++;
-                if (operateModes[currentSection] == Mode.Hagasu)
+                if (currentSection < operateModes.Count)
                 {
-                    isHagasuMode = true;
-                    isHaruMode = false;
-                }
-                else if (operateModes[currentSection] == Mode.Haru)
-                {
-                    isHagasuMode = false;
-                    isHaruMode = true;
+                    if (operateModes[currentSection] == Mode.Hagasu)
+                    {
+                        isHagasuMode = true;
+                        isHaruMode = false;
+                    }
+                    else if (operateModes[currentSection] == Mode.Haru)
+                    {
+                        isHagasuMode = false;
+                        isHaruMode = true;
+                    }
                 }
             }
 
-
             if (isHagasuMode)
             {
-                if (Input.GetMouseButton(0))
+                if (Input.GetMouseButtonDown(0))
                 {
-                    if (Input.mousePosition.x < lastMousePositionX)
-                    {
-                        float diff = lastMousePositionX - Input.mousePosition.x;
-                        videoPlayer.time += diff * timeMoveSpeed;
+                    Debug.Log("Hagasu Down");
+                    downPoint = Input.mousePosition.x;
+                    HagasuModeDown = true;
+                }
 
-                        if (videoPlayer.time > checkPoints[currentSection])
-                        {
-                            videoPlayer.time = checkPoints[currentSection];
-                            Debug.Log("replay");
-                            isHagasuMode = false;
-                            videoPlayer.Play();
-                            currentSection++;
-                        }
+                if (HagasuModeDown && Input.GetMouseButton(0))
+                {
+                    float diff = downPoint - Input.mousePosition.x;
+                    if (diff > haruMouseLength)
+                    {
+                        Debug.Log("replay " + currentSection.ToString());
+                        isHagasuMode = false;
+                        videoPlayer.Play();
+                        audioSource.PlayOneShot(soundEffects[0]);
+                        currentSection++;
                     }
+                }
+
+                if (Input.GetMouseButtonUp(0))
+                {
+                    HagasuModeDown = false;
                 }
             }
 
@@ -89,6 +102,7 @@ public class VideoOperator : MonoBehaviour
             {
                 if (Input.GetMouseButtonDown(0))
                 {
+                    Debug.Log("Haru Down");
                     downPoint = Input.mousePosition.x;
                     HaruModeDown = true;
                 }
@@ -98,9 +112,10 @@ public class VideoOperator : MonoBehaviour
                     float diff = Input.mousePosition.x - downPoint;
                     if (diff > haruMouseLength)
                     {
-                        Debug.Log("replay");
+                        Debug.Log("replay " + currentSection.ToString());
                         isHaruMode = false;
                         videoPlayer.Play();
+                        audioSource.PlayOneShot(soundEffects[0]);
                         currentSection++;
                     }
                 }
@@ -112,6 +127,10 @@ public class VideoOperator : MonoBehaviour
             }
         }
 
+        if (currentSection == 2 && !audioSource.isPlaying)
+        {
+            audioSource.Play();
+        }
 
         currentTime = (float)videoPlayer.time;
         lastMousePositionX = Input.mousePosition.x;
@@ -122,5 +141,15 @@ public class VideoOperator : MonoBehaviour
         // VideoClipの長さを取得
         double videoLength = videoPlayer.length;
         Debug.Log("Video length: " + videoLength + " seconds");
+
+        videoPlayer.loopPointReached += OnVideoEndReached;
+    }
+
+    private void OnVideoEndReached(VideoPlayer vp)
+    {
+        Debug.Log("Loop");
+        currentSection = 2;
+        vp.time = checkPoints[2]; // Set to the third checkpoint
+        vp.Play();
     }
 }
